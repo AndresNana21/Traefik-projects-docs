@@ -1,0 +1,26 @@
+name: arquitectura
+services:
+  traefik:
+    image: traefik:v3.6
+    container_name: traefik2
+    command:
+      - "--providers.docker=true"
+      - "--providers.docker.exposedbydefault=false"
+
+      # EntryPoint para apps
+      - "--entrypoints.web.address=:8082"
+
+      # Dashboard clásico en 8080
+      - "--api.dashboard=true"
+      - "--api.insecure=true"
+    ports:
+      - "8083:8080"   # Dashboard
+      - "8082:8082"   # Apps
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    networks:
+      - web2
+
+networks:
+  web2:
+    name: web
