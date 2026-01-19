@@ -70,20 +70,4 @@ Para que un contenedor sea detectado por esta arquitectura, asegúrate de:
 
 ---
 
-Generado con ❤️ para pcAndres
-
-```
-
----
-
-### ¿Cómo editar esto en Neovim?
-
-Como acabas de instalar **LazyVim**, aquí tienes unos trucos para terminar tu documentación:
-
-1.  **Abrir el archivo:** `nvim README.md`
-2.  **Vista Previa:** Si tienes activado el plugin de markdown, presiona `<Space> u p` para ver cómo queda en el navegador.
-3.  **Formateo de Tablas:** Si escribes la tabla y se ve desordenada, al guardar (`:w`), LazyVim suele usar **Prettier** para alinear las columnas automáticamente.
-
-**¿Te gustaría que te ayude a redactar ahora el contenido específico para la carpeta de Astro (el Dockerfile y las explicaciones de Nginx que hablamos antes)?**
-
 ```
