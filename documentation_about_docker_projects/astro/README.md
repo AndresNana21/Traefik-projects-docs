@@ -1,49 +1,97 @@
-para poder crear el docker-compose.yml y el Dockerfile para proyectos de astro sigue estos pasos.
+---
 
-( 1 )  te recomendamos instar fnm para gestionar las verciones de node, una ves lo tengas crea un proyecto de astro con el siguente comando.
+# 🚀 Despliegue de Astro con Docker y Traefik
 
+Esta guía detalla cómo configurar un proyecto de **Astro** utilizando **Docker** para contenedores y **Traefik** como proxy inverso.
+
+## 1. Preparación del Entorno
+
+### Gestión de Node.js
+
+Para evitar conflictos de versiones, recomendamos usar [fnm (Fast Node Manager)](https://github.com/Schniz/fnm). Una vez instalado, prepara tu proyecto:
+
+```bash
+# Instalar e instalar la versión LTS de Node
+fnm use --install-lts
+
+# Crear el nuevo proyecto de Astro
 npm create astro@latest
 
+```
 
+---
 
-el docker-compose.yml tiene que verse asi solo cambia los lugares donde se usa la palabrar "astro 2"
->>>>
-  
+## 2. Configuración de Docker
+
+Para que el proyecto funcione correctamente, necesitamos dos archivos en la raíz del proyecto: el `Dockerfile` (receta de la imagen) y el `docker-compose.yml` (orquestación).
+
+### A. Dockerfile (Multi-stage Build)
+
+Usamos un proceso de dos etapas para que la imagen final sea ligera y segura.
+
+```dockerfile
+# Etapa 1: Construcción (Build)
+FROM node:lts-slim AS build
+WORKDIR /app
+
+# Instalar dependencias
+COPY package*.json ./
+RUN npm install
+
+# Copiar archivos y generar el sitio estático
+COPY . .
+RUN npm run build
+
+# Etapa 2: Servidor de producción (Nginx)
+FROM nginx:alpine
+LABEL maintainer="tu-nombre"
+
+# Copiamos los archivos generados desde la etapa 'build'
+COPY --from=build /app/dist /usr/share/nginx/html
+
+EXPOSE 80
+CMD ["nginx", "-g", "daemon off;"]
+
+```
+
+### B. Docker Compose
+
+Este archivo gestiona el contenedor y su comunicación con el proxy **Traefik**.
+
+> **Nota:** Antes de levantar el servicio, asegúrate de tener creada la red externa:
+> `docker network create web`
+
+```yaml
 services:
   astro-app:
     build: .
-    container_name: astro2
+    container_name: astro_container # Nombre del contenedor
     networks:
       - web
     labels:
       - "traefik.enable=true"
-      # Configura aquí el host que quieras usar, o usa uno local para pruebas
-      - "traefik.http.routers.astro2.rule=Host(`astro2.localhost`)"
-      - "traefik.http.routers.astro2.entrypoints=web"
-      # Traefik enviará el tráfico al puerto 80 del contenedor de Nginx
-      - "traefik.http.services.astro2.loadbalancer.server.port=80"
+      # Define aquí tu dominio o host local
+      - "traefik.http.routers.astro-router.rule=Host(`astro.localhost`)"
+      - "traefik.http.routers.astro-router.entrypoints=web"
+      # Puerto interno de Nginx definido en el Dockerfile
+      - "traefik.http.services.astro-service.loadbalancer.server.port=80"
 
 networks:
   web:
-    external: true # Si ya creaste la red 'web' previamente
+    external: true
 
->>>>
+```
 
-y el Dockerfile se tiene que ver asi 
+---
 
->>>>>
-# Etapa 1: Construcción
-FROM node:lts-slim AS build
-WORKDIR /app
-COPY package*.json ./
-RUN npm install
-COPY . .
-RUN npm run build
+## 3. Comandos Útiles
 
-# Etapa 2: Servidor estático
-FROM nginx:alpine
-# Copiamos el build de Astro a la carpeta que sirve Nginx
-COPY --from=build /app/dist /usr/share/nginx/html
-EXPOSE 80
-CMD ["nginx", "-g", "daemon off;"]
->>>>>
+Para poner en marcha tu aplicación, ejecuta los siguientes comandos en tu terminal:
+
+| Acción | Comando |
+| --- | --- |
+| **Levantar el contenedor** | `docker-compose up -d --build` |
+| **Detener el servicio** | `docker-compose down` |
+| **Ver logs en tiempo real** | `docker logs -f astro_container` |
+
+---
