@@ -172,9 +172,14 @@ sudo chown -R $USER:www-data .
 ```
 
 
+## permisos para archivos de cache y database de laravel 
 
+Laravel necesito permisos para la cache y la base de datos con estos comandos puedes dar esos permisos , dentro de el proyecto en la raiz fuera del contenedor.
 
-
+```comands
+sudo chmod -R 777 storage bootstrap/cache
+sudo chmod -R 777 database/
+```
 
 ## Filament permisos
 
