@@ -16,7 +16,7 @@
 
 para crear el proyecto utilizamos una imagen de composer de la cual sacaremos un contenedor temporal que nos permitira especifcar que queremos crea.
 
-Tomar en cuneta que puedes modificar la verción del proyecto en ^12.0 o puedes modificar el nombre del proyecto en mi-proyecto-laravel.
+Tomar en cuneta que puedes modificar la verción del proyecto en **^12.0** o puedes modificar el nombre del proyecto en **mi-proyecto-laravel.**
 
 ```Comand
 
@@ -36,7 +36,7 @@ toma en cuneta que si cambiaste el nombre del proyecto tambien necesitas modific
 ```Comand
 cd mi-proyecto-laravel 
 ```
-
+---
 ## ( 2 )  crear los archivos para Dockerfile , docker-compose.yml y nginx.conf
 
 en la raiz de el proyecto de documentación encontraras una carpeta para que la copies y la reutilices en este proyecto nuevo de laravel.
@@ -61,7 +61,7 @@ Crear los archivos
 
 * Dockerfile
 ```Comand
-cat <<'EOF' > Dockerfile
+cat <<'EOF' > ./Docker/Dockerfile
 FROM php:8.4-fpm
 
 # Instalar dependencias del sistema y librerías necesarias para extensiones de PHP
@@ -109,5 +109,95 @@ EXPOSE 9000
 CMD ["php-fpm"]
 EOF
 ```
+---
 
 
+
+* docker-coompose.yml
+
+```Comand
+cat <<'EOF' > ./Docker/docker-compose.yml
+name: laravel-1
+
+services:
+  # El "motor" de PHP
+  app:
+    build:
+      context: ..
+      dockerfile: Docker/Dockerfile
+    container_name: laravel-1-app
+    volumes:
+      - ..:/var/www
+    networks:
+      - web
+
+  # El servidor Web (Nginx) que conecta con Traefik
+  webserver:
+    image: nginx:alpine
+    container_name: laravel-1-web
+    volumes:
+      - ..:/var/www
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf
+    networks:
+      - web
+    labels:
+      - "traefik.enable=true"
+      # Usamos la variable para el dominio
+      - "traefik.http.routers.laravel-1.rule=Host(`laravel-1.localhost`)"
+      - "traefik.http.routers.laravel-1.entrypoints=web"
+      - "traefik.http.services.laravel-1.loadbalancer.server.port=80"
+      - "traefik.docker.network=web"
+
+networks:
+  web:
+    external: true
+EOF
+```
+
+
+---
+
+* nginx.conf
+```Comand
+cat <<'EOF' > ./Docker/nginx.conf
+server {
+    listen 80;
+    index index.php index.html;
+    root /var/www/public; # Laravel sirve desde /public
+
+    location ~ \.php$ {
+        try_files $uri =404;
+        fastcgi_split_path_info ^(.+\.php)(/.+)$;
+        fastcgi_pass laravel-1-app:9000; # Nombre del servicio en docker-compose
+        fastcgi_index index.php;
+        include fastcgi_params;
+        fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;
+        fastcgi_param PATH_INFO $fastcgi_path_info;
+    }
+
+    location / {
+        try_files $uri $uri/ /index.php?$query_string;
+    }
+}
+EOF
+```
+
+---
+
+## (3) configuración de los archivos Dockerfile, docker-compose.yml y nginx.conf
+
+estos archivos necesitan ser configurados para evitar conflictos como nombres de contenedores repetidos o contenedoes no existens, tambien lables mal echos.
+
+estas configuraciónes son en casos especificos por lo que si es de prueba no deberia de haber problemas.
+
+### (3.1) configuración de el docker-compose.yml
+
+este archivo contiene lo que serian los contenedores para php y nginx, se repite la palabra **laravel-1** en cada parte para que puedas modificar facilmente.
+
+
+lo mismo es para los lables y el dominio **laravel-1.localhost** que necesitas modificar, lo mas recomendado es tener el nombre del software para que no se repita con otros software que tienen diferente nombre.
+
+### (3.2) configuración de el nginx.conf
+
+
+en caso de cambiar la palabra **laravel-3-app** que seria el nombre del contenedo de php tienes que cambiarlo tambien en el nginx.conf para que las peticiones lleguen correctamente desde el traefik.
