@@ -312,7 +312,14 @@ php artisan storage:link
 
 
 
+### Comandos para darle permisos a los usuarios x a manipular los archivos de laravel
 
+
+recuerda cambiar la palabra laravel-1-app por el nombre del contenedor php de tu proyecto.
+
+```Comand
+docker exec -u root -it laravel-1-app  sh -c "chown -R www-data:www-data /var/www/storage /var/www/bootstrap/cache /var/www/database && chmod -R 775 /var/www/storage /var/www/bootstrap/cache /var/www/database"
+```
 
 
 
