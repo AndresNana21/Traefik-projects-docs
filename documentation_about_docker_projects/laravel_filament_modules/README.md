@@ -201,3 +201,123 @@ lo mismo es para los lables y el dominio **laravel-1.localhost** que necesitas m
 
 
 en caso de cambiar la palabra **laravel-3-app** que seria el nombre del contenedo de php tienes que cambiarlo tambien en el nginx.conf para que las peticiones lleguen correctamente desde el traefik.
+
+
+
+## (4) desplegar los servicios de docker 
+
+
+* ingresar a la carpeta de Docker
+```Comand
+cd Docker
+```
+
+
+* desplegar los servicios en segundo plano con docker compose  
+```Comand
+docker compose up -d
+```
+
+* salir de la carpeta Docker
+```Comand
+cd ..
+```
+
+
+
+
+
+
+
+
+
+## (5) ingresar en el contenedor de php con composer incluido para instalar librerias o usar los servicios de filament
+
+
+si quieres utilizar alguna libreria o instalarla, vas a necesitar de **composer** un manejador de paquetes para php, esta tecnologia se encunetra en el contenedor de php, por lo que tendras que ingresar en ese contenedor con el fin de acceder a esta herramienta.
+
+
+para ingresar al contenedor ejecuta este comando el cual te permitira ingresar en modo bash para ejecutar comanos como si fuera una terminar normal.
+
+
+```Comand
+docker exec -it laravel-1-app bash
+```
+### (5.1) utilizar la libreria de filament-modules de el creador savannabits
+
+esta es una libreria para trabajar con otras 2 librerias que normalmente no son compatibles, las cuales son :
+
+* Filament
+* nwidart/laravel-modules
+
+filament es una libreria para crear gestores de información **CRUD** de manera muy simples y pofreciónales.
+
+laravel modules es una libreria que nos permite separar todo lo que necesita laravel para trabajar, como lo serian migracione, models, controllers , rutas y incluyendo la estructura de filament para que funcione.
+
+el comano a utilizar para instalar esta librerria es el siguente.
+
+```Comand
+composer require coolsam/modules
+```
+### (5.2) configuración de el composer.json 
+
+un punto adicional es que deves de agregar la siguente configuración en el archivo composer.json para permitirle a los composer.json de cada modulo ser considerados.
+
+recuerda salir del contenedor de php ya es el proyecto real que tienes que modificar, docker se encarga de copiar el proyecto real dentro de los contenedores gracias a sus volumenes.
+
+* nota: los compose.json permiten la configuración o interación entre los archivos bases de laravel.
+
+
+* lo que tienes que integrar
+```Context
+ "merge-plugin": {
+        "include": [
+            "Modules/*/composer.json"
+        ]
+    }
+```
+
+
+* Como tiene que quedar
+```Result
+ "extra": {
+        "laravel": {
+            "dont-discover": []
+        },
+        "merge-plugin": {
+            "include": [
+                "Modules/*/composer.json"
+            ]
+        }
+    },
+
+```
+### (5.3) ejecutar la libreria
+
+recuerda estar dentro del contenedor para que estos comandos funcionen correctamente.
+
+```Comand
+php artisan modules:install
+```
+
+### (5.4) ejecutar estilos de filament
+
+a la hora de utilizar filament puede que no te carguen los estilos por lo que estos comandos te solucionan ese problema al publicar los estilos que filament necesita.
+
+* dentro del contenedor
+```Comand
+php artisan filament:assets
+php artisan storage:link
+```
+
+
+
+
+
+
+
+
+
+
+
+
