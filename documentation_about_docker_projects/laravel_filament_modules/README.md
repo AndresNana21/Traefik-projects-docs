@@ -323,8 +323,12 @@ docker exec -u root -it laravel-1-app  sh -c "chown -R www-data:www-data /var/ww
 
 
 
+### Cada ves que hagas algo nuevo dentro de un contenedor
+
+cada ves que se creen archivos y esas cosas vas a necesitar darle permisos para poder editar esos archivos, esto se puede logra con 
 
 
-
-
+```Comand
+sudo chown -R $USER:$USER .
+```
 
